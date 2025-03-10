@@ -3,10 +3,13 @@ import BasicForm from '@/components/forms/BasicForm';
 
 export const metadata: Metadata = {
   title: 'Basic Contact Form | Form Showcase',
-  description: 'A simple contact form implementation with form validation',
+  description: 'A simple contact form implementation with form validation and accessibility features',
 };
 
-// Basic Form page component
+/**
+ * Basic Form page component
+ * Renders the basic contact form with proper page metadata
+ */
 export default function BasicFormPage() {
   return (
     <div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -14,13 +14,37 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-// Multi-step form with validation between steps
+/**
+ * Multi-step form with enhanced accessibility features
+ * - ARIA live regions for step announcements
+ * - Focus management between steps
+ * - Keyboard navigation with Alt+Arrow shortcuts
+ * - Clear status announcements
+ */
 export default function MultiStepForm() {
   // Track the current step (0-based index)
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  
+  // Refs for focus management
+  const formStartRef = useRef<HTMLHeadingElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const firstStepRef = useRef<HTMLInputElement>(null);
+const secondStepRef = useRef<HTMLInputElement>(null);
+const thirdStepRef = useRef<HTMLInputElement>(null);
+  
+  // References for the first focusable element in each step
+  const stepRefs = useMemo(() => [
+    firstStepRef,
+    secondStepRef,
+    thirdStepRef
+  ], []);
+  
+  // State for ARIA announcements
+  const [stepChangeAnnouncement, setStepChangeAnnouncement] = useState<string | null>(null);
+  const [statusAnnouncement, setStatusAnnouncement] = useState<string | null>(null);
   
   // Setup the form with react-hook-form
   const {
@@ -52,7 +76,7 @@ export default function MultiStepForm() {
   });
   
   // Define steps with their titles and validation schemas
-  const steps = [
+  const steps = useMemo(() => [
     { 
       title: 'Personal Information', 
       description: 'Enter your name and contact details',
@@ -71,28 +95,36 @@ export default function MultiStepForm() {
       schema: additionalInfoSchema,
       fields: ['phone', 'preferences'] as const
     },
-  ];
+  ], []);
   
-  // Handle moving to the next step
-  const handleNext = async () => {
+  // Handle moving to the next step with validation
+  const handleNext = useCallback(async () => {
     // Validate only the fields in the current step
     const isValid = await trigger(steps[step].fields as unknown as Array<keyof MultiStepFormValues>);
     
     if (isValid) {
       // Move to the next step
       setStep(prevStep => prevStep + 1);
+    } else {
+      // Announce validation errors
+      setStatusAnnouncement('There are validation errors. Please correct them before proceeding.');
+      
+      // Focus the first field with an error
+      const firstErrorField = document.querySelector('[aria-invalid="true"]') as HTMLElement;
+      firstErrorField?.focus();
     }
-  };
+  }, [trigger, steps, step, setStatusAnnouncement]);
   
   // Handle moving to the previous step
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setStep(prevStep => prevStep - 1);
-  };
+  }, []);
   
   // Handle form submission
   const onSubmit = async (data: MultiStepFormValues) => {
     setIsSubmitting(true);
     setSubmitError(null);
+    setStatusAnnouncement('Submitting form, please wait...');
     
     try {
       // Send form data to API
@@ -112,6 +144,10 @@ export default function MultiStepForm() {
       reset();
       setStep(0);
       setSubmitSuccess(true);
+      setStatusAnnouncement('Form submitted successfully. Thank you for your submission.');
+      
+      // Return focus to the top of the form
+      formStartRef.current?.focus();
       
       // Hide success message after 5 seconds
       setTimeout(() => {
@@ -119,16 +155,61 @@ export default function MultiStepForm() {
       }, 5000);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setStatusAnnouncement('Error submitting form. ' + (error instanceof Error ? error.message : 'An unexpected error occurred'));
     } finally {
       setIsSubmitting(false);
     }
   };
   
+  // Keyboard navigation for steps
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only if focus is within the form
+      if (!formRef.current?.contains(document.activeElement)) return;
+      
+      // Alt+Left: Previous step
+      if (e.key === 'ArrowLeft' && e.altKey && step > 0) {
+        e.preventDefault();
+        handlePrevious();
+      }
+      // Alt+Right: Next step (if validation passes)
+      else if (e.key === 'ArrowRight' && e.altKey && step < steps.length - 1) {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [step, handleNext, steps.length]);
+  
+  // Focus management when step changes
+  useEffect(() => {
+    // Announce step change
+    setStepChangeAnnouncement(`Step ${step + 1} of ${steps.length}: ${steps[step].title}`);
+    
+    // After render, focus the first field in the current step
+    setTimeout(() => {
+      stepRefs[step]?.current?.focus();
+    }, 100);
+  }, [step, stepRefs, steps]);
+  
+  // Clear step announcement after it's read
+  useEffect(() => {
+    if (stepChangeAnnouncement) {
+      const timer = setTimeout(() => {
+        setStepChangeAnnouncement(null);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [stepChangeAnnouncement]);
+  
   // Render the step indicator
   const renderStepIndicator = () => {
     return (
       <div className="mb-8">
-        <nav aria-label="Progress">
+        <nav aria-label="Progress" role="navigation">
           <ol className="flex items-center">
             {steps.map((stepItem, index) => (
               <li 
@@ -173,11 +254,15 @@ export default function MultiStepForm() {
                         "absolute left-0 top-4 -ml-px mt-0.5 h-0.5 w-full",
                         step > index ? "bg-indigo-600" : "bg-gray-200"
                       )}
+                      aria-hidden="true"
                     />
                   )}
                 </div>
                 <div className="mt-2">
-                  <span className="text-sm font-medium">
+                  <span 
+                    className="text-sm font-medium"
+                    aria-hidden={step !== index}
+                  >
                     {stepItem.title}
                   </span>
                 </div>
@@ -191,16 +276,19 @@ export default function MultiStepForm() {
   
   // Render the appropriate form fields based on current step
   const renderForm = () => {
-    
     if (step === 0) {
       // Personal Information Step
       return (
-        <div className="space-y-6">
+        <div className="space-y-6" role="group" aria-labelledby="step-1-heading">
+          <h3 id="step-1-heading" className="sr-only">Personal Information</h3>
+          
           <Input
             label="First Name"
             {...register('firstName')}
             error={errors.firstName?.message}
             required
+            ref={stepRefs[0]} // Reference for focus management
+            autoFocus
           />
           
           <Input
@@ -222,18 +310,23 @@ export default function MultiStepForm() {
     } else if (step === 1) {
       // Address Step
       return (
-        <div className="space-y-6">
+        <div className="space-y-6" role="group" aria-labelledby="step-2-heading">
+          <h3 id="step-2-heading" className="sr-only">Address Information</h3>
+          
           <Input
             label="Address Line 1"
             {...register('addressLine1')}
             error={errors.addressLine1?.message}
             required
+            ref={stepRefs[1]} // Reference for focus management
+            autoFocus
           />
           
           <Input
             label="Address Line 2"
             {...register('addressLine2')}
             error={errors.addressLine2?.message}
+            helperText="Optional"
           />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -272,21 +365,25 @@ export default function MultiStepForm() {
     } else if (step === 2) {
       // Additional Information Step
       return (
-        <div className="space-y-6">
+        <div className="space-y-6" role="group" aria-labelledby="step-3-heading">
+          <h3 id="step-3-heading" className="sr-only">Additional Information</h3>
+          
           <Input
             label="Phone Number"
             type="tel"
             {...register('phone')}
             error={errors.phone?.message}
             helperText="Optional"
+            ref={stepRefs[2]} // Reference for focus management
+            autoFocus
           />
           
           <div className="space-y-4">
-            <div className="text-sm font-medium text-gray-700 mb-2">
+            <div className="text-sm font-medium text-gray-700 mb-2" id="preferences-group">
               Preferences
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-3" role="group" aria-labelledby="preferences-group">
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -343,6 +440,40 @@ export default function MultiStepForm() {
     return null;
   };
   
+  // ARIA live regions for announcements
+  const accessibilityAnnouncements = (
+    <>
+      {/* Status announcements */}
+      {statusAnnouncement && (
+        <div 
+          aria-live="assertive" 
+          className="sr-only"
+          role="status"
+        >
+          {statusAnnouncement}
+        </div>
+      )}
+      
+      {/* Step change announcements */}
+      {stepChangeAnnouncement && (
+        <div 
+          aria-live="polite" 
+          className="sr-only"
+        >
+          {stepChangeAnnouncement}
+        </div>
+      )}
+      
+      {/* Keyboard shortcut instructions - only visible on focus */}
+      <div 
+        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:z-10 focus-visible:bg-white focus-visible:p-4 focus-visible:border focus-visible:border-gray-300 focus-visible:rounded-md focus-visible:shadow-md"
+        tabIndex={0}
+      >
+        <p>Keyboard shortcuts: Alt+Left Arrow to go to previous step, Alt+Right Arrow to go to next step</p>
+      </div>
+    </>
+  );
+  
   // If submission was successful, show success message
   if (submitSuccess) {
     return (
@@ -365,7 +496,13 @@ export default function MultiStepForm() {
                 />
               </svg>
             </div>
-            <h2 className="mt-3 text-lg font-medium text-gray-900">Submission successful!</h2>
+            <h2 
+              className="mt-3 text-lg font-medium text-gray-900"
+              ref={formStartRef}
+              tabIndex={-1}
+            >
+              Submission successful!
+            </h2>
             <p className="mt-2 text-sm text-gray-500">
               Thank you for completing the multi-step form. Your information has been saved.
             </p>
@@ -380,18 +517,50 @@ export default function MultiStepForm() {
             </div>
           </div>
         </div>
+        
+        {/* Status announcement for screen readers */}
+        <div aria-live="polite" className="sr-only">
+          Form submitted successfully. Thank you for your submission.
+        </div>
       </div>
     );
   }
   
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Skip to main content link */}
+      <a 
+        href="#form-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:p-2 focus:bg-indigo-600 focus:text-white focus:rounded-md"
+      >
+        Skip to form content
+      </a>
+      
+      {/* Accessibility announcements */}
+      {accessibilityAnnouncements}
+      
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">{steps[step].title}</h2>
-        <p className="text-sm text-gray-500 mb-6">{steps[step].description}</p>
+        <h2 
+          className="text-xl font-semibold text-gray-800 mb-2"
+          ref={formStartRef}
+          tabIndex={-1}
+          id="form-heading"
+        >
+          {steps[step].title}
+        </h2>
+        <p 
+          className="text-sm text-gray-500 mb-6"
+          id="form-description"
+        >
+          {steps[step].description}
+        </p>
         
         {submitError && (
-          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md" role="alert">
+          <div 
+            className="mb-6 p-4 bg-red-50 text-red-700 rounded-md" 
+            role="alert"
+            aria-live="assertive"
+          >
             <p className="font-medium">Error submitting form</p>
             <p>{submitError}</p>
           </div>
@@ -400,7 +569,14 @@ export default function MultiStepForm() {
         {/* Step indicator */}
         {renderStepIndicator()}
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form 
+          onSubmit={handleSubmit(onSubmit)} 
+          className="space-y-6"
+          ref={formRef}
+          aria-labelledby="form-heading"
+          aria-describedby="form-description"
+          id="form-content"
+        >
           {/* Dynamic form fields based on current step */}
           {renderForm()}
           
@@ -412,6 +588,7 @@ export default function MultiStepForm() {
               disabled={step === 0}
               variant="outline"
               className="border-gray-300 text-gray-700"
+              aria-label={step === 0 ? "Previous step (disabled)" : "Previous step"}
             >
               Previous
             </Button>
@@ -421,6 +598,7 @@ export default function MultiStepForm() {
                 type="button"
                 onClick={handleNext}
                 className="bg-indigo-600 text-white hover:bg-indigo-700"
+                aria-label="Next step"
               >
                 Next
               </Button>
@@ -429,8 +607,17 @@ export default function MultiStepForm() {
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-indigo-600 text-white hover:bg-indigo-700"
+                aria-label={isSubmitting ? "Submitting form" : "Submit form"}
               >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : 'Submit'}
               </Button>
             )}
           </div>

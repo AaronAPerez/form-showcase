@@ -1,17 +1,34 @@
 import Link from 'next/link';
 
-// Footer component with basic information and links
+/**
+ * Footer component with accessibility enhancements
+ * - Semantic HTML structure
+ * - Proper ARIA labels
+ * - Keyboard navigable links
+ * - Clear link purposes
+ */
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   
+  // Navigation links for the footer
+  const footerLinks = [
+    { href: '/forms/basic', label: 'Basic Form' },
+    { href: '/forms/multi-step', label: 'Multi-Step Form' },
+    { href: '/forms/dynamic', label: 'Dynamic Form' },
+    { href: '/forms/file-upload', label: 'File Upload Form' },
+  ];
+  
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
+    <footer className="bg-gray-50 border-t border-gray-200" role="contentinfo" aria-labelledby="footer-heading">
+      <h2 id="footer-heading" className="sr-only">Footer</h2>
+      
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="md:flex md:items-center md:justify-between">
+          {/* Social/home links */}
           <div className="flex justify-center md:justify-start space-x-6">
             <Link
               href="/"
-              className="text-gray-400 hover:text-gray-500"
+              className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md"
               aria-label="Home"
             >
               <span className="sr-only">Home</span>
@@ -28,12 +45,12 @@ export default function Footer() {
                 />
               </svg>
             </Link>
-            <Link
-              href="https://https://github.com/AaronAPerez/form-showcase"
-              className="text-gray-400 hover:text-gray-500"
+            <a
+              href="https://github.com/AaronAPerez/form-showcase"
+              className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="GitHub"
+              aria-label="Form Showcase on GitHub (opens in a new tab)"
             >
               <span className="sr-only">GitHub</span>
               <svg
@@ -48,40 +65,42 @@ export default function Footer() {
                   clipRule="evenodd"
                 />
               </svg>
-            </Link>
+            </a>
           </div>
+          
+          {/* Copyright info */}
           <div className="mt-8 md:mt-0">
             <p className="text-center md:text-right text-sm text-gray-500">
               &copy; {currentYear} Form Showcase. All rights reserved.
             </p>
             <p className="text-center md:text-right text-xs text-gray-400 mt-1">
-              A demonstration of form patterns with Next.js, React, and TypeScript
+              A demonstration of accessible form patterns with Next.js, React, and TypeScript
             </p>
           </div>
         </div>
+        
+        {/* Navigation links */}
         <div className="mt-8 border-t border-gray-200 pt-8">
-          <nav className="flex flex-wrap justify-center" aria-label="Footer">
-            <div className="px-5 py-2">
-              <Link href="/forms/basic" className="text-sm text-gray-500 hover:text-gray-900">
-                Basic Form
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link href="/forms/multi-step" className="text-sm text-gray-500 hover:text-gray-900">
-                Multi-Step Form
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link href="/forms/dynamic" className="text-sm text-gray-500 hover:text-gray-900">
-                Dynamic Form
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link href="/forms/file-upload" className="text-sm text-gray-500 hover:text-gray-900">
-                File Upload Form
-              </Link>
-            </div>
+          <nav className="flex flex-wrap justify-center" aria-label="Footer Navigation">
+            {footerLinks.map((link) => (
+              <div className="px-5 py-2" key={link.href}>
+                <Link 
+                  href={link.href} 
+                  className="text-sm text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md"
+                >
+                  {link.label}
+                </Link>
+              </div>
+            ))}
           </nav>
+        </div>
+        
+        {/* Accessibility statement - optional but recommended */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-400">
+            This website is designed to be accessible to all users. If you experience any accessibility issues,
+            please <a href="mailto:accessibility@example.com" className="underline hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">contact us</a>.
+          </p>
         </div>
       </div>
     </footer>

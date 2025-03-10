@@ -3,10 +3,13 @@ import MultiStepForm from '@/components/forms/MultiStepForm';
 
 export const metadata: Metadata = {
   title: 'Multi-Step Form | Form Showcase',
-  description: 'A multi-step form with validation between steps and a progress indicator',
+  description: 'A multi-step form with validation between steps, focus management, and screen reader announcements',
 };
 
-// Multi-Step Form page component
+/**
+ * Multi-Step Form page component
+ * Renders the multi-step form with proper page metadata
+ */
 export default function MultiStepFormPage() {
   return (
     <div>
@@ -15,7 +18,8 @@ export default function MultiStepFormPage() {
           <h1 className="text-3xl font-bold leading-tight text-gray-900">Multi-Step Form</h1>
           <p className="mt-2 max-w-4xl text-sm text-gray-500">
             A multi-step form implementation with validation between steps, progress tracking, 
-            and the ability to navigate back and forth between form sections.
+            and the ability to navigate back and forth between form sections. Features enhanced 
+            keyboard navigation and screen reader support.
           </p>
         </div>
 
@@ -26,7 +30,9 @@ export default function MultiStepFormPage() {
             <li>Visual progress indicator showing current step</li>
             <li>Form state persistence between steps</li>
             <li>Back and forth navigation with data retention</li>
-            <li>Final submission with complete validation</li>
+            <li>Keyboard shortcuts (Alt+Left/Right) for navigation</li>
+            <li>Screen reader announcements for step changes</li>
+            <li>Focus management for improved accessibility</li>
           </ul>
         </div>
 

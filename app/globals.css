@@ -67,16 +67,73 @@
  
 @layer base {
   * {
-    @apply border-gray-200 ;
+    @apply border-gray-200;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
-    @apply bg-gray-100;;
+    @apply bg-gray-100;
+    text-rendering: optimizeSpeed;
+    line-height: 1.5;
+  }
+  
+  /* Improve focus visibility for keyboard users */
+  :focus {
+    @apply outline-2 outline-offset-2 outline-indigo-600;
+  }
+  
+  /* Enhanced interactive elements */
+  button:focus, 
+  [role="button"]:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
   }
 }
 
-/* Custom styles */
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+
+/* Reduce motion for users with preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .fade-in, .stagger-item {
+    opacity: 1;
+    transform: translateY(0);
+    animation: none;
+  }
+}
+
+/* Custom form styles */
 .form-input-error {
-  @apply border-red-500 focus:ring-red-500;
+  @apply border-red-500 ring-red-500;
 }
 
 .form-label {
@@ -84,13 +141,167 @@
 }
 
 .form-input {
-  @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm;
+  @apply block w-full rounded-md border-gray-300 shadow-sm 
+         focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm;
 }
 
 .form-button {
-  @apply inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium 
+         rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none 
+         focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
 }
 
 .form-error-message {
   @apply mt-1 text-sm text-red-600;
+}
+
+/* Accessibility utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .form-button, button {
+    border: 2px solid transparent;
+  }
+  
+  input:focus, 
+  select:focus, 
+  textarea:focus, 
+  button:focus, 
+  [role="button"]:focus {
+    outline: 3px solid;
+  }
+}
+
+/* Screen reader feedback */
+[aria-live="polite"], [aria-live="assertive"] {
+  @apply sr-only;
+}
+
+/* Focus control for section and form field state */
+[aria-invalid="true"] {
+  @apply border-red-500;
+}
+
+/* Enhanced form validation styles */
+input:invalid, 
+select:invalid, 
+textarea:invalid {
+  @apply border-red-500;
+}
+
+/* Improve color contrast for better accessibility */
+.text-gray-500 {
+  @apply text-gray-600;
+}
+
+/* Progress visualization with accessible properties */
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2.5 overflow-hidden;
+}
+
+.progress-bar-fill {
+  @apply h-full bg-indigo-600 transition-all duration-300 ease-out;
+}
+
+/* File upload dropzone styles */
+.file-dropzone {
+  @apply border-2 border-dashed rounded-md p-6 text-center transition-colors cursor-pointer
+         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+}
+
+.file-dropzone-active {
+  @apply border-indigo-300 bg-indigo-50;
+}
+
+.file-dropzone-error {
+  @apply border-red-300 bg-red-50;
+}
+
+/* Multi-step form navigation styles */
+.step-indicator {
+  @apply flex items-center mb-8;
+}
+
+.step-bullet {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full;
+}
+
+.step-bullet-active {
+  @apply bg-indigo-600 text-white;
+}
+
+.step-bullet-completed {
+  @apply bg-indigo-600 text-white;
+}
+
+.step-bullet-inactive {
+  @apply bg-gray-200 text-gray-500;
+}
+
+.step-connector {
+  @apply absolute left-0 top-4 -ml-px mt-0.5 h-0.5 w-full;
+}
+
+.step-connector-active {
+  @apply bg-indigo-600;
+}
+
+.step-connector-inactive {
+  @apply bg-gray-200;
+}
+
+/* Ensure form elements have sufficient spacing */
+.form-group {
+  @apply mb-6;
+}
+
+/* Better alignment for checkboxes and radios */
+.form-checkbox-group {
+  @apply flex items-start;
+}
+
+.form-checkbox-input {
+  @apply flex items-center h-5 mt-1;
+}
+
+.form-checkbox-label {
+  @apply ml-3 text-sm leading-6;
+}
+
+/* Improve table accessibility */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  @apply text-left font-semibold;
+}
+
+/* Skip to content link that's accessible */
+.skip-to-content {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 
+         focus:p-2 focus:bg-indigo-600 focus:text-white focus:rounded-md;
 }
