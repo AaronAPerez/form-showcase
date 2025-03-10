@@ -75,7 +75,7 @@ export default function HomePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero section with asymmetric grid */}
-        <div id="main-content" className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center py-16">
+        <div id="main-content" className="grid grid-cols-1 gap-8 items-center py-10">
           <div className="lg:col-span-3 space-y-8">
             <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-gray-900">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">Form Showcase</span>
@@ -106,12 +106,12 @@ export default function HomePage() {
               </a>
             </div>
           </div>
-          <div className="lg:col-span-2">
+          {/* <div className="lg:col-span-2">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-300 to-blue-300 rounded-2xl transform rotate-3 blur-sm" aria-hidden="true"></div>
               <div className="relative bg-white backdrop-blur-sm bg-white/80 border border-white/50 p-6 rounded-xl shadow-xl">
                 <h3 className="font-semibold text-lg mb-4">Try it out</h3>
-                {/* Mini form example */}
+                {/* Mini form example 
                 <form className="space-y-4" action="#" aria-label="Example form preview">
                   <div className="space-y-1">
                     <label htmlFor="preview-email" className="text-sm font-medium text-gray-700">Email</label>
@@ -138,9 +138,9 @@ export default function HomePage() {
                     Send Message
                   </button>
                 </form>
-              </div>
+              </div> 
             </div>
-          </div>
+          </div>*/}
         </div>
 
         {/* Form showcase section */}
