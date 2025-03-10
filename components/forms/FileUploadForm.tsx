@@ -46,7 +46,7 @@ export default function FileUploadForm() {
       setValue('file', file, { shouldValidate: true });
     } else {
       setSelectedFile(null);
-      setValue('file', undefined);
+      setValue('file', null as unknown as File);
     }
   };
   
@@ -218,7 +218,7 @@ export default function FileUploadForm() {
                       type="button"
                       onClick={() => {
                         setSelectedFile(null);
-                        setValue('file', undefined);
+                        setValue('file', null as unknown as File);
                         
                         // Reset the file input
                         if (fileInputRef.current) {

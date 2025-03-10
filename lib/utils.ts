@@ -19,7 +19,7 @@ export function formatDate(date: Date): string {
 export function safeJsonParse<T>(json: string, fallback: T): T {
   try {
     return JSON.parse(json) as T;
-  } catch (error) {
+  } catch {
     return fallback;
   }
 }

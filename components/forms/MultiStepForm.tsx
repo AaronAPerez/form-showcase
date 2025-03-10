@@ -9,18 +9,12 @@ import {
   additionalInfoSchema,
   multiStepFormSchema,
   type MultiStepFormValues,
-  type PersonalInfoValues,
-  type AddressInfoValues,
-  type AdditionalInfoValues
 } from '@/lib/schemas/form-schemas';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { FormError } from '@/components/ui/FormError';
 import { cn } from '@/lib/utils';
 
-/**
- * Multi-step form with validation between steps
- */
+// Multi-step form with validation between steps
 export default function MultiStepForm() {
   // Track the current step (0-based index)
   const [step, setStep] = useState(0);
@@ -34,7 +28,6 @@ export default function MultiStepForm() {
     handleSubmit,
     trigger,
     formState: { errors },
-    getValues,
     reset,
   } = useForm<MultiStepFormValues>({
     resolver: zodResolver(multiStepFormSchema),
@@ -82,11 +75,8 @@ export default function MultiStepForm() {
   
   // Handle moving to the next step
   const handleNext = async () => {
-    // Get the current step schema
-    const currentStepSchema = steps[step].schema;
-    
     // Validate only the fields in the current step
-    const isValid = await trigger(steps[step].fields as any);
+    const isValid = await trigger(steps[step].fields as unknown as Array<keyof MultiStepFormValues>);
     
     if (isValid) {
       // Move to the next step
@@ -201,7 +191,6 @@ export default function MultiStepForm() {
   
   // Render the appropriate form fields based on current step
   const renderForm = () => {
-    const currentStepData = steps[step];
     
     if (step === 0) {
       // Personal Information Step

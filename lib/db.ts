@@ -24,7 +24,7 @@ if (isDev) {
   
   // Create a Pool-like interface that uses neon serverless under the hood
   db = {
-    query: async (text: string, params?: any[]) => {
+    query: async (text: string, params?: (string | number | boolean | null)[]) => {
       return await sql(text, params);
     },
     // Add minimal Pool implementation for TypeScript
@@ -32,7 +32,7 @@ if (isDev) {
     on: () => {},
     connect: async () => {
       return {
-        query: async (text: string, params?: any[]) => {
+        query: async (text: string, params?: (string | number | boolean | null)[]) => {
           return await sql(text, params);
         },
         release: () => {},
@@ -47,7 +47,7 @@ if (isDev) {
  * @param params Query parameters
  * @returns Query result
  */
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: (string | number | boolean | null)[]) {
   try {
     const start = Date.now();
     const result = await db.query(text, params);
