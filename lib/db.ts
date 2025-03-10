@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { neon } from '@neon-io/serverless';
+import { neon } from '@neondatabase/serverless';
 
 // Environment variables defined in .env.local file
 const connectionString = process.env.DATABASE_URL;
